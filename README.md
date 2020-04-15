@@ -4,7 +4,7 @@ This repo has a "Hello World" Python application that uses the [SQLAlchemy ORM](
 
 Prerequisites: 
 
-`pip3 install sqlalchemy cockroachdb`
+`pip3 install sqlalchemy sqlalchemy-cockroachdb`
 
 To run the code:
 
