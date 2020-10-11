@@ -29,22 +29,11 @@ class Account(Base):
 # For more information, see
 # https://github.com/cockroachdb/sqlalchemy-cockroachdb.
 
-SECURE_CLUSTER = True           # Set to False for insecure clusters
-connect_args = {}
-
-if SECURE_CLUSTER:
-    connect_args = {
-        'sslmode': 'require',
-        'sslrootcert': 'certs/ca.crt',
-        'sslkey': 'certs/client.maxroach.key',
-        'sslcert': 'certs/client.maxroach.crt'
-    }
-else:
-    connect_args = {'sslmode': 'disable'}
-
 engine = create_engine(
-    'cockroachdb://maxroach@localhost:26257/bank',
-    connect_args=connect_args,
+    # For cockroach demo:
+    'cockroachdb://<username>:<password>@<hostname>:<port>/bank?sslmode=require',
+    # For CockroachCloud:
+    # 'cockroachdb://<username>:<password>@<hostname>:<port>/bank?sslmode=verify-full&sslrootcert=<certs_dir>/<ca.crt>',
     echo=True                   # Log SQL queries to stdout
 )
 
