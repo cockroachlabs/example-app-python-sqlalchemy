@@ -1,18 +1,20 @@
 """This module performs the following steps sequentially:
     1. Reads in existing account IDs (if any) from the bank database.
-    2. Creates additional accounts with randomly generated IDs. Then, it adds a bit of money to each new account.
-    3. Chooses two accounts at random and takes half of the money from the first and deposits it into the second.
+    2. Creates additional accounts with randomly generated IDs. Then,
+       it adds a bit of money to each new account.
+    3. Chooses two accounts at random and takes half of the money
+       from the first and deposits it into the second.
 """
 
 import random
 from math import floor
+
 from sqlalchemy import create_engine, Column, Integer
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-from cockroachdb.sqlalchemy import run_transaction
+from sqlalchemy_cockroachdb import run_transaction
 
 Base = declarative_base()
-
 
 
 class Account(Base):
@@ -55,13 +57,13 @@ def create_random_accounts(sess, num):
     """
     new_accounts = []
     while num > 0:
-        billion = 1000000000
+        billion = 1_000_000_000
         new_id = floor(random.random()*billion)
         seen_account_ids.add(new_id)
         new_accounts.append(
             Account(
                 id=new_id,
-                balance=floor(random.random()*1000000)
+                balance=floor(random.random()*1_000_000)
             )
         )
         num = num - 1
