@@ -88,7 +88,7 @@ if __name__ == '__main__':
         db_uri = os.path.expandvars(conn_string)
 
         print("Initializing the bank database...")
-        os.system('cockroach sql --url {0} -f dbinit.sql'.format(db_uri))
+        os.system('cockroach sql --url \'{0}\' -f dbinit.sql'.format(db_uri))
         print("Database initialized.")
 
         psycopg_uri = db_uri.replace(
