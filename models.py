@@ -4,6 +4,7 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
+
 class Account(Base):
     """The Account class corresponds to the "accounts" database table.
     """
