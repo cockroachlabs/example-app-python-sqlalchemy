@@ -103,7 +103,9 @@ if __name__ == '__main__':
             print("Database initialized.")
 
         psycopg_uri = db_uri.replace(
-            'postgres', 'cockroachdb').replace('26257?', '26257/bank?')
+            'postgresql://', 'cockroachdb://').replace(
+                'postgres://', 'cockroachdb://').replace(
+                    '26257?', '26257/bank?')
         # The "cockroachdb://" prefix for the engine URL indicates that we are
         # connecting to CockroachDB using the 'cockroachdb' dialect.
         # For more information, see
