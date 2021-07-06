@@ -6,15 +6,17 @@
     4. Chooses five accounts at random and deletes them.
 """
 
-import random
+from argparse import ArgumentParser
 from math import floor
-import uuid
 import os
-from sqlalchemy_cockroachdb import run_transaction
+import random
+import uuid
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy_cockroachdb import run_transaction
+
 from models import Account
-from argparse import ArgumentParser
 
 # The code below inserts new accounts.
 
