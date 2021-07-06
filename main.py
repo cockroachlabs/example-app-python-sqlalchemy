@@ -14,6 +14,7 @@ from sqlalchemy_cockroachdb import run_transaction
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import Account
+from argparse import ArgumentParser
 
 # The code below inserts new accounts.
 
@@ -74,12 +75,20 @@ def delete_accounts(session, num):
         print("Deleted account {0}.".format(account.id))
         session.delete(account)
 
-# Run the transfer inside a transaction.
+
+def parse_cmdline():
+    parser = ArgumentParser()
+    parser.add_argument("url", help="Enter your node\'s connection string\n")
+    parser.add_argument("-n", "--no-init", dest="no_init",
+                        action="store_true", help="Do not initialize the database")
+    opt = parser.parse_args()
+    return opt
 
 
 if __name__ == '__main__':
 
-    conn_string = input('Enter your node\'s connection string:\n')
+    opt = parse_cmdline()
+    conn_string = opt.url
     # For cockroach demo:
     # postgres://demo:<demo_password>@127.0.0.1:26257?sslmode=require
     # For CockroachCloud:
@@ -87,9 +96,11 @@ if __name__ == '__main__':
     try:
         db_uri = os.path.expandvars(conn_string)
 
-        print("Initializing the bank database...")
-        os.system('cockroach sql --url \'{0}\' -f dbinit.sql'.format(db_uri))
-        print("Database initialized.")
+        if not opt.no_init:
+            print("Initializing the bank database...")
+            os.system(
+                'cockroach sql --url \'{0}\' -f dbinit.sql'.format(db_uri))
+            print("Database initialized.")
 
         psycopg_uri = db_uri.replace(
             'postgres', 'cockroachdb').replace('26257?', '26257/bank?')
