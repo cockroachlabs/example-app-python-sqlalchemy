@@ -1,9 +1,8 @@
 """This simple CRUD application performs the following operations sequentially:
-    1. Initializes a SQL database and table, using the cockroach sql CLI and a .sql file.
-    2. Creates 100 new accounts with randomly generated IDs and randomly-computed balance amounts.
-    3. Chooses two accounts at random and takes half of the money from the first and deposits it
+    1. Creates 100 new accounts with randomly generated IDs and randomly-computed balance amounts.
+    2. Chooses two accounts at random and takes half of the money from the first and deposits it
      into the second.
-    4. Chooses five accounts at random and deletes them.
+    3. Chooses five accounts at random and deletes them.
 """
 
 from argparse import ArgumentParser
@@ -11,6 +10,7 @@ from math import floor
 import os
 import random
 import uuid
+import urllib.parse
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -81,8 +81,6 @@ def delete_accounts(session, num):
 def parse_cmdline():
     parser = ArgumentParser()
     parser.add_argument("url", help="Enter your node\'s connection string\n")
-    parser.add_argument("-n", "--no-init", dest="no_init",
-                        action="store_true", help="Do not initialize the database")
     opt = parser.parse_args()
     return opt
 
@@ -97,12 +95,7 @@ if __name__ == '__main__':
     # postgres://<username>:<password>@<globalhost>:26257/<cluster_name>.defaultdb?sslmode=verify-full&sslrootcert=<certs_dir>/<ca.crt>
     try:
         db_uri = os.path.expandvars(conn_string)
-
-        if not opt.no_init:
-            print("Initializing the bank database...")
-            os.system(
-                'cockroach sql --url \'{0}\' -f dbinit.sql'.format(db_uri))
-            print("Database initialized.")
+        db_uri = urllib.parse.unquote(db_uri)
 
         psycopg_uri = db_uri.replace(
             'postgresql://', 'cockroachdb://').replace(
