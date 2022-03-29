@@ -5,16 +5,15 @@
     3. Chooses five accounts at random and deletes them.
 """
 
-from argparse import ArgumentParser
 from math import floor
 import os
 import random
 import uuid
-import urllib.parse
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_cockroachdb import run_transaction
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from models import Account
 
@@ -31,8 +30,7 @@ def create_accounts(session, num):
         account_balance = floor(random.random()*1_000_000)
         new_accounts.append(Account(id=account_id, balance=account_balance))
         seen_account_ids.append(account_id)
-        print("Created new account with id {0} and balance {1}.".format(
-            account_id, account_balance))
+        print(f"Created new account with id {account_id} and balance {account_balance}.")
         num = num - 1
     session.add_all(new_accounts)
 
@@ -40,24 +38,25 @@ def create_accounts(session, num):
 def transfer_funds_randomly(session, one, two):
     """Transfer money between two accounts.
     """
-    source = session.query(Account).filter(Account.id == one).first()
+    try:
+        source = session.query(Account).filter(Account.id == one).one()
+    except NoResultFound:
+        print("No result was found")
+    except MultipleResultsFound:
+        print("Multiple results were found")
     dest = session.query(Account).filter(Account.id == two).first()
-    print("Random account balances:\nAccount {0}: {1}\nAccount {2}: {3}".format(
-        one, source.balance, two, dest.balance))
+    print(f"Random account balances:\nAccount {one}: {source.balance}\nAccount {two}: {dest.balance}")
 
     amount = floor(source.balance/2)
-    print("Transferring {0} from account {1} to account {2}...".format(
-        amount, one, two))
+    print(f"Transferring {amount} from account {one} to account {two}...")
 
     # Check balance of the first account.
     if source.balance < amount:
-        raise "Insufficient funds in account {0}".format(one)
-    else:
-        source.balance -= amount
-        dest.balance += amount
+        raise ValueError(f"Insufficient funds in account {one}")
+    source.balance -= amount
+    dest.balance += amount
 
-    print("Transfer complete.\nNew balances:\nAccount {0}: {1}\nAccount {2}: {3}".format(
-        one, source.balance, two, dest.balance))
+    print(f"Transfer complete.\nNew balances:\nAccount {one}: {source.balance}\nAccount {two}: {dest.balance}")
 
 
 def delete_accounts(session, num):
@@ -74,41 +73,21 @@ def delete_accounts(session, num):
     accounts = session.query(Account).filter(Account.id.in_(delete_ids)).all()
 
     for account in accounts:
-        print("Deleted account {0}.".format(account.id))
+        print(f"Deleted account {account.id}.")
         session.delete(account)
 
 
-def parse_cmdline():
-    parser = ArgumentParser()
-    parser.add_argument("url", help="Enter your node\'s connection string\n")
-    opt = parser.parse_args()
-    return opt
-
-
 if __name__ == '__main__':
-
-    opt = parse_cmdline()
-    conn_string = opt.url
     # For cockroach demo:
-    # postgres://demo:<demo_password>@127.0.0.1:26257?sslmode=require
+    # DATABASE_URL=postgresql://demo:<demo_password>@127.0.0.1:26257?sslmode=require
     # For CockroachCloud:
-    # postgres://<username>:<password>@<globalhost>:26257/<cluster_name>.defaultdb?sslmode=verify-full&sslrootcert=<certs_dir>/<ca.crt>
+    # DATABASE_URL=postgresql://<username>:<password>@<globalhost>:26257/<cluster_name>.defaultdb?sslmode=verify-full&sslrootcert=<certs_dir>/<ca.crt>
+    db_uri = os.environ['DATABASE_URL'].replace("postgresql://", "cockroachdb://")
     try:
-        db_uri = os.path.expandvars(conn_string)
-        db_uri = urllib.parse.unquote(db_uri)
-
-        psycopg_uri = db_uri.replace(
-            'postgresql://', 'cockroachdb://').replace(
-                'postgres://', 'cockroachdb://').replace(
-                    '26257?', '26257/bank?')
-        # The "cockroachdb://" prefix for the engine URL indicates that we are
-        # connecting to CockroachDB using the 'cockroachdb' dialect.
-        # For more information, see
-        # https://github.com/cockroachdb/sqlalchemy-cockroachdb.
-        engine = create_engine(psycopg_uri)
+        engine = create_engine(db_uri)
     except Exception as e:
-        print('Failed to connect to database.')
-        print('{0}'.format(e))
+        print("Failed to connect to database.")
+        print(f"{e}")
 
     seen_account_ids = []
 
