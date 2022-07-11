@@ -84,7 +84,7 @@ if __name__ == '__main__':
     # DATABASE_URL=postgresql://<username>:<password>@<globalhost>:26257/<cluster_name>.defaultdb?sslmode=verify-full&sslrootcert=<certs_dir>/<ca.crt>
     db_uri = os.environ['DATABASE_URL'].replace("postgresql://", "cockroachdb://")
     try:
-        engine = create_engine(db_uri)
+        engine = create_engine(db_uri, connect_args={"application_name":"docs_simplecrud_sqlalchemy"})
     except Exception as e:
         print("Failed to connect to database.")
         print(f"{e}")
